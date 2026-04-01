@@ -1,0 +1,111 @@
+<div class="page">
+  <div class="top">
+    <div class="heading">
+      <h2>Dashboard</h2>
+      <p class="muted">
+        @if (plan()) {
+          {{ plan()!.name }} · {{ plan()!.startDate }} → {{ plan()!.endDate }}
+        }
+      </p>
+    </div>
+    <div class="cta">
+      <p-button
+        label="Manage categories"
+        icon="pi pi-tags"
+        severity="secondary"
+        routerLink="/categories"
+      />
+      <p-button label="Add expense" icon="pi pi-plus" routerLink="/expenses" />
+    </div>
+  </div>
+
+  <div class="kpis">
+    <p-card>
+      <div class="kpi">
+        <span class="k">Total income</span>
+        <span class="v">{{ plan()?.totalIncome | number: '1.0-2' }}</span>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="kpi">
+        <span class="k">Total spent</span>
+        <span class="v">{{ totalSpent() | number: '1.0-2' }}</span>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="kpi">
+        <span class="k">Remaining</span>
+        <span class="v" [class.negative]="remainingIncome() < 0">
+          {{ remainingIncome() | number: '1.0-2' }}
+        </span>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="kpi">
+        <span class="k">Unallocated income</span>
+        <span class="v" [class.negative]="allocationRemaining() < 0">
+          {{ allocationRemaining() | number: '1.0-2' }}
+        </span>
+      </div>
+    </p-card>
+  </div>
+
+  <p-card header="Category balances">
+    @if (categories().length === 0) {
+      <div class="empty">
+        <p class="muted">
+          No categories yet. Add categories to allocate your income and start tracking.
+        </p>
+        <p-button label="Add category" icon="pi pi-plus" routerLink="/categories" />
+      </div>
+    } @else {
+      <p-table [value]="categories()" [rowHover]="true" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th class="num">Allocated</th>
+            <th class="num">Spent</th>
+            <th class="num">Remaining</th>
+            <th style="width: 18rem;">Usage</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-cat>
+          <tr>
+            <td>{{ cat.name }}</td>
+            <td class="num">{{ cat.allocatedAmount | number: '1.0-2' }}</td>
+            <td class="num">{{ spent(cat.id) | number: '1.0-2' }}</td>
+            <td class="num" [class.negative]="remaining(cat) < 0">
+              {{ remaining(cat) | number: '1.0-2' }}
+            </td>
+            <td>
+              <div class="usage">
+                <p-progressBar
+                  [value]="progress(cat)"
+                  [showValue]="false"
+                  [styleClass]="'pb-' + severity(cat)"
+                />
+                <p-tag
+                  [severity]="severity(cat)"
+                  [value]="progressLabel(cat)"
+                />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </p-card>
+
+  @if (spendingChartData()) {
+    <p-card header="Spending distribution">
+      <div class="chart-wrap" aria-label="Spending distribution chart">
+        <p-chart
+          type="doughnut"
+          [data]="spendingChartData()!"
+          [options]="spendingChartOptions()"
+        />
+      </div>
+    </p-card>
+  }
+</div>
+

@@ -1,0 +1,46 @@
+<div class="app-shell">
+  <p-toast />
+  <p-confirmDialog />
+
+  <p-menubar [model]="items()">
+    <ng-template pTemplate="start">
+      <a class="brand" routerLink="/dashboard" aria-label="Go to dashboard">
+        <span class="brand__mark" aria-hidden="true">₹</span>
+        <span class="brand__text">Budget Tracker</span>
+      </a>
+    </ng-template>
+
+    <ng-template pTemplate="end">
+      <div class="actions" role="group" aria-label="App actions">
+        <div class="overspend">
+          <span class="label">Overspend</span>
+          <p-selectButton
+            [options]="overspendOptions"
+            [ngModel]="overspendValue()"
+            (ngModelChange)="setOverspendBehavior($event)"
+            optionLabel="label"
+            optionValue="value"
+            ariaLabel="Overspend behavior"
+          />
+        </div>
+
+        <p-button
+          type="button"
+          [text]="true"
+          [icon]="darkMode() ? 'pi pi-moon' : 'pi pi-sun'"
+          [label]="darkMode() ? 'Dark' : 'Light'"
+          (onClick)="toggleDarkMode()"
+        />
+
+        @if (!store.activePlan()) {
+          <p-button type="button" label="Create Plan" icon="pi pi-plus" (onClick)="goToSetup()" />
+        }
+      </div>
+    </ng-template>
+  </p-menubar>
+
+  <main class="content" role="main">
+    <router-outlet />
+  </main>
+</div>
+

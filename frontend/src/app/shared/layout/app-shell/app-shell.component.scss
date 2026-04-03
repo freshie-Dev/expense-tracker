@@ -1,0 +1,101 @@
+.api-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+}
+
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--surface-ground, #f8fafc) 88%, transparent);
+}
+
+.app-dark .boot-overlay {
+  background: color-mix(in oklab, var(--surface-ground, #0f172a) 88%, transparent);
+}
+
+.boot-overlay__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.boot-overlay__text {
+  font-size: 0.9375rem;
+  opacity: 0.85;
+}
+
+.cache-banner {
+  padding: 0.5rem 1rem;
+  background: color-mix(in oklab, var(--yellow-500, #eab308) 20%, transparent);
+  color: var(--text-color);
+  font-size: 0.875rem;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 600;
+}
+
+.brand__mark {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: color-mix(in oklab, var(--primary-color, #3b82f6) 15%, transparent);
+}
+
+.brand__text {
+  letter-spacing: 0.2px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.overspend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.overspend .label {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.content {
+  padding: 1rem;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .actions {
+    gap: 0.5rem;
+  }
+
+  .overspend .label {
+    display: none;
+  }
+}
+

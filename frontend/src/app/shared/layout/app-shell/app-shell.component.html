@@ -1,0 +1,68 @@
+<div class="app-shell">
+  <p-toast />
+  <p-confirmDialog />
+
+  @if (store.initComplete() && store.apiLoading()) {
+    <div class="api-loading-bar" aria-hidden="true">
+      <p-progressBar mode="indeterminate" [style]="{ height: '3px' }" />
+    </div>
+  }
+
+  @if (!store.initComplete()) {
+    <div class="boot-overlay" role="status" aria-live="polite" aria-busy="true">
+      <div class="boot-overlay__inner">
+        <p-progressSpinner strokeWidth="4" ariaLabel="Loading budget data" />
+        <span class="boot-overlay__text">Loading…</span>
+      </div>
+    </div>
+  }
+
+  @if (store.usingCachedData()) {
+    <div class="cache-banner" role="status">
+      Using offline cache — API was unavailable. Reconnect and refresh to sync.
+    </div>
+  }
+
+  <p-menubar [model]="items()">
+    <ng-template pTemplate="start">
+      <a class="brand" routerLink="/dashboard" aria-label="Go to dashboard">
+        <span class="brand__mark" aria-hidden="true">₹</span>
+        <span class="brand__text">Budget Tracker</span>
+      </a>
+    </ng-template>
+
+    <ng-template pTemplate="end">
+      <div class="actions" role="group" aria-label="App actions">
+        <div class="overspend">
+          <span class="label">Overspend</span>
+          <p-selectButton
+            [options]="overspendOptions"
+            [ngModel]="overspendValue()"
+            [disabled]="settingsBusy()"
+            (ngModelChange)="setOverspendBehavior($event)"
+            optionLabel="label"
+            optionValue="value"
+            ariaLabel="Overspend behavior"
+          />
+        </div>
+
+        <p-button
+          type="button"
+          [text]="true"
+          [icon]="darkMode() ? 'pi pi-moon' : 'pi pi-sun'"
+          [label]="darkMode() ? 'Dark' : 'Light'"
+          (onClick)="toggleDarkMode()"
+        />
+
+        @if (!store.activePlan()) {
+          <p-button type="button" label="Create Plan" icon="pi pi-plus" (onClick)="goToSetup()" />
+        }
+      </div>
+    </ng-template>
+  </p-menubar>
+
+  <main class="content" role="main">
+    <router-outlet />
+  </main>
+</div>
+

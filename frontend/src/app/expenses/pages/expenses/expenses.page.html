@@ -1,0 +1,131 @@
+<div class="page">
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="header">
+        <div class="title">
+          <h2>Expenses</h2>
+          <p class="muted">Log spending against a category. Remaining balances update instantly.</p>
+        </div>
+        <p-button
+          label="Add Expense"
+          icon="pi pi-plus"
+          [disabled]="categories().length === 0 || deletingId() !== null"
+          (onClick)="openCreate()"
+        />
+      </div>
+    </ng-template>
+
+    @if (categories().length === 0) {
+      <div class="empty">
+        <p class="muted">Add at least one category before logging expenses.</p>
+      </div>
+    } @else {
+      <p-table [value]="expenses()" [rowHover]="true" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th class="num">Amount</th>
+            <th style="width: 9rem;">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-exp>
+          <tr>
+            <td>{{ asDate(exp.date) | date }}</td>
+            <td>{{ categoryName(exp.categoryId) }}</td>
+            <td class="desc">{{ exp.description ?? '—' }}</td>
+            <td class="num">{{ exp.amount | number: '1.0-2' }}</td>
+            <td>
+              <div class="row-actions">
+                <p-button
+                  type="button"
+                  size="small"
+                  severity="danger"
+                  icon="pi pi-trash"
+                  label="Delete"
+                  (onClick)="remove(exp)"
+                />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5">
+              <div class="empty">
+                <p class="muted">No expenses yet. Add one to start tracking.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </p-card>
+
+  <p-dialog
+    [visible]="dialogOpen()"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="true"
+    [style]="{ width: 'min(92vw, 560px)' }"
+    header="Add expense"
+    (onHide)="closeDialog()"
+  >
+    <form class="form" [formGroup]="form" (ngSubmit)="save()">
+      <div class="field">
+        <label for="cat">Category</label>
+        <p-select
+          inputId="cat"
+          [options]="categories()"
+          optionLabel="name"
+          optionValue="id"
+          formControlName="categoryId"
+          placeholder="Select a category"
+        ></p-select>
+        @if (form.controls.categoryId.invalid && form.controls.categoryId.touched) {
+          <small class="error">Category is required.</small>
+        }
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="amt">Amount</label>
+          <p-inputNumber
+            inputId="amt"
+            formControlName="amount"
+            [min]="0"
+            [useGrouping]="true"
+            [maxFractionDigits]="2"
+            mode="decimal"
+          />
+          @if (form.controls.amount.invalid && form.controls.amount.touched) {
+            <small class="error">Amount must be greater than 0.</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="dt">Date</label>
+          <p-datepicker inputId="dt" formControlName="date" [showIcon]="true" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="desc">Description (optional)</label>
+        <textarea id="desc" pTextarea rows="3" formControlName="description"></textarea>
+      </div>
+
+      <div class="dialog-actions">
+        <p-button
+          type="button"
+          severity="secondary"
+          label="Cancel"
+          [disabled]="adding()"
+          (onClick)="closeDialog()"
+        />
+        <p-button type="submit" label="Add" icon="pi pi-check" [loading]="adding()" [disabled]="adding()" />
+      </div>
+    </form>
+  </p-dialog>
+</div>
+

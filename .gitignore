@@ -1,17 +1,37 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files
 
-# Compiled output
+# --- Compiled output (Angular, under frontend/) ---
+/frontend/dist
 /dist
 /tmp
 /out-tsc
 /bazel-out
 
-# Node
+# --- Node ---
 /node_modules
-npm-debug.log
-yarn-error.log
+/frontend/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json.bak
 
-# IDEs and editors
+# --- Backend (Express / TypeScript) ---
+backend/node_modules
+backend/dist
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/coverage
+backend/*.log
+
+# --- Environment & secrets (root) ---
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- IDEs and editors ---
 .idea/
 .project
 .classpath
@@ -19,8 +39,11 @@ yarn-error.log
 *.launch
 .settings/
 *.sublime-workspace
+*.swp
+*.swo
+*~
 
-# Visual Studio Code
+# --- Visual Studio Code ---
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -28,16 +51,24 @@ yarn-error.log
 !.vscode/extensions.json
 .history/*
 
-# Miscellaneous
+# --- Angular ---
 /.angular/cache
+/frontend/.angular/cache
 .sass-cache/
-/connect.lock
+
+# --- Testing & coverage ---
 /coverage
+/frontend/coverage
 /libpeerconnection.log
 testem.log
 /typings
 __screenshots__/
 
-# System files
+# --- Misc ---
+/connect.lock
+*.tsbuildinfo
+
+# --- System files ---
 .DS_Store
 Thumbs.db
+Desktop.ini

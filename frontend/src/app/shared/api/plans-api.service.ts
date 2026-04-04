@@ -1,5 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import type { BudgetPlan } from '../models/budget-plan.model';
+import type {
+  PlanExportSnapshot,
+  PlanImportMode,
+  PlanImportRequest
+} from '../models/plan-export-snapshot.model';
 import { ApiClientService } from './api-client.service';
 import { mapPlan, mapPlans } from './mappers/plan.mapper';
 
@@ -36,5 +41,17 @@ export class PlansApiService {
 
   delete(id: string): Promise<void> {
     return this.api.delete<unknown>(`/plans/${id}`).then(() => undefined);
+  }
+
+  exportSnapshot(planId: string): Promise<PlanExportSnapshot> {
+    return this.api
+      .get<PlanExportSnapshot>(`/plans/${planId}/export`)
+      .then(({ data }) => data as PlanExportSnapshot);
+  }
+
+  importSnapshot(body: PlanImportRequest): Promise<{ planId: string; mode: PlanImportMode }> {
+    return this.api
+      .post<{ planId: string; mode: PlanImportMode }>('/plans/import', body)
+      .then(({ data }) => data as { planId: string; mode: PlanImportMode });
   }
 }

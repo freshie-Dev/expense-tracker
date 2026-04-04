@@ -69,5 +69,12 @@ export class ExpensesRepository {
   async softDeleteByCategoryIds(categoryIds: string[]): Promise<void> {
     await ExpenseModel.updateMany({ categoryId: { $in: categoryIds } }, { $set: { isDeleted: true } });
   }
+
+  async findAllByCategoryIds(categoryIds: string[]): Promise<ExpenseDocument[]> {
+    if (categoryIds.length === 0) return [];
+    return ExpenseModel.find({ categoryId: { $in: categoryIds }, isDeleted: false })
+      .sort({ date: -1, createdAt: -1 })
+      .lean();
+  }
 }
 

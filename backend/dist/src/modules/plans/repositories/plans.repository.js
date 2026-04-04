@@ -25,5 +25,8 @@ class PlansRepository {
     async softDeleteById(id) {
         await plan_schema_1.BudgetPlanModel.updateOne({ _id: id }, { $set: { isDeleted: true, isActive: false } });
     }
+    async updateById(id, patch) {
+        return plan_schema_1.BudgetPlanModel.findOneAndUpdate({ _id: id, isDeleted: false }, { $set: patch }, { new: true }).lean();
+    }
 }
 exports.PlansRepository = PlansRepository;

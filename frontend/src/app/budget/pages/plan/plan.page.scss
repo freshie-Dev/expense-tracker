@@ -43,8 +43,51 @@ label {
 
 .row-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.actions-col {
+  width: 18rem;
+  min-width: 12rem;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  font-weight: 600;
+}
+
+.import-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.import-hint {
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.import-textarea {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .plan-name {

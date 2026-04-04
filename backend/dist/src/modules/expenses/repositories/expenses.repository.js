@@ -49,5 +49,12 @@ class ExpensesRepository {
     async softDeleteByCategoryIds(categoryIds) {
         await expense_schema_1.ExpenseModel.updateMany({ categoryId: { $in: categoryIds } }, { $set: { isDeleted: true } });
     }
+    async findAllByCategoryIds(categoryIds) {
+        if (categoryIds.length === 0)
+            return [];
+        return expense_schema_1.ExpenseModel.find({ categoryId: { $in: categoryIds }, isDeleted: false })
+            .sort({ date: -1, createdAt: -1 })
+            .lean();
+    }
 }
 exports.ExpensesRepository = ExpensesRepository;

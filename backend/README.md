@@ -87,8 +87,10 @@ docker compose up --build
 
 - `GET /api/health`
 - `POST /api/plans`
+- `POST /api/plans/import` (JSON snapshot: create new active plan or replace existing)
 - `GET /api/plans`
 - `GET /api/plans/active`
+- `GET /api/plans/:id/export` (downloadable JSON snapshot: plan + categories + expenses)
 - `GET /api/plans/:id`
 - `PATCH /api/plans/:id/activate`
 - `DELETE /api/plans/:id`

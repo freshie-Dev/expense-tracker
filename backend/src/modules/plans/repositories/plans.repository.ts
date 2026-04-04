@@ -39,5 +39,16 @@ export class PlansRepository {
   async softDeleteById(id: string): Promise<void> {
     await BudgetPlanModel.updateOne({ _id: id }, { $set: { isDeleted: true, isActive: false } });
   }
+
+  async updateById(
+    id: string,
+    patch: { name: string; totalIncome: number; startDate: Date; endDate: Date }
+  ): Promise<BudgetPlanDocument | null> {
+    return BudgetPlanModel.findOneAndUpdate(
+      { _id: id, isDeleted: false },
+      { $set: patch },
+      { new: true }
+    ).lean();
+  }
 }
 

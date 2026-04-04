@@ -5,5 +5,5 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://YOUR_API_HOST/api'
+  apiBaseUrl: 'https://localhost:5000/api'
 };

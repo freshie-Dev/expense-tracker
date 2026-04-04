@@ -1,18 +1,23 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { DividerModule } from 'primeng/divider';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
+import { DialogModule } from 'primeng/dialog';
+import { DividerModule } from 'primeng/divider';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { TextareaModule } from 'primeng/textarea';
 
 import { ApiBusinessError } from '../../../shared/api/api-business.error';
+import { PlansApiService } from '../../../shared/api/plans-api.service';
+import type { PlanExportSnapshot, PlanImportMode } from '../../../shared/models';
 import { BudgetStore } from '../../../shared/state/budget.store';
 
 function toIsoDate(value: Date): string {
@@ -31,15 +36,19 @@ function parseIsoDate(value: string): Date {
   selector: 'app-plan-page',
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     CardModule,
     DividerModule,
+    DialogModule,
     InputTextModule,
     InputNumberModule,
     DatePickerModule,
     ButtonModule,
     TableModule,
-    TagModule
+    TagModule,
+    TextareaModule,
+    SelectModule
   ],
   templateUrl: './plan.page.html',
   styleUrl: './plan.page.scss'
@@ -48,6 +57,7 @@ export class PlanPage {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   readonly store = inject(BudgetStore);
+  private readonly plansApi = inject(PlansApiService);
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
 
@@ -58,6 +68,18 @@ export class PlanPage {
   readonly activatingId = signal<string | null>(null);
   readonly deletingId = signal<string | null>(null);
   readonly resetting = signal(false);
+  readonly exportingId = signal<string | null>(null);
+  readonly importing = signal(false);
+
+  readonly importOpen = signal(false);
+  readonly importJson = signal('');
+  readonly importMode = signal<PlanImportMode>('create');
+  readonly importReplacePlanId = signal<string | null>(null);
+
+  readonly importModeOptions = [
+    { label: 'Create new plan (becomes active)', value: 'create' as const },
+    { label: 'Replace an existing plan', value: 'replace' as const }
+  ];
 
   readonly activePlanId = computed(() => this.activePlan()?.id ?? null);
 
@@ -204,5 +226,132 @@ export class PlanPage {
 
   asDate(value: string): Date {
     return parseIsoDate(value);
+  }
+
+  openImport(): void {
+    this.importJson.set('');
+    this.importMode.set('create');
+    this.importReplacePlanId.set(this.activePlanId());
+    this.importOpen.set(true);
+  }
+
+  closeImport(): void {
+    if (!this.importing()) {
+      this.importOpen.set(false);
+    }
+  }
+
+  async exportPlanSnapshot(planId: string, name: string): Promise<void> {
+    this.exportingId.set(planId);
+    try {
+      const snap = await this.plansApi.exportSnapshot(planId);
+      const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safe = name.replace(/[^a-z0-9-_]+/gi, '-').slice(0, 48) || 'plan';
+      a.download = `budget-plan-${safe}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      this.messages.add({
+        severity: 'success',
+        summary: 'Exported',
+        detail: 'JSON file downloaded. You can re-import it later from this page.'
+      });
+    } catch (e) {
+      this.showError(e, 'Could not export plan');
+    } finally {
+      this.exportingId.set(null);
+    }
+  }
+
+  confirmImport(): void {
+    const raw = this.importJson().trim();
+    if (!raw) {
+      this.messages.add({
+        severity: 'warn',
+        summary: 'Paste JSON',
+        detail: 'Paste an exported plan snapshot into the text area.'
+      });
+      return;
+    }
+
+    let snapshot: PlanExportSnapshot;
+    try {
+      snapshot = JSON.parse(raw) as PlanExportSnapshot;
+    } catch {
+      this.messages.add({
+        severity: 'error',
+        summary: 'Invalid JSON',
+        detail: 'The text could not be parsed as JSON.'
+      });
+      return;
+    }
+
+    if (snapshot.schemaVersion !== 1) {
+      this.messages.add({
+        severity: 'error',
+        summary: 'Unsupported snapshot',
+        detail: 'Expected schemaVersion: 1.'
+      });
+      return;
+    }
+
+    const mode = this.importMode();
+    const targetId = this.importReplacePlanId();
+    if (mode === 'replace' && !targetId) {
+      this.messages.add({
+        severity: 'warn',
+        summary: 'Select a plan',
+        detail: 'Choose which plan to replace with this snapshot.'
+      });
+      return;
+    }
+
+    if (mode === 'replace') {
+      this.confirm.confirm({
+        header: 'Replace plan data?',
+        message:
+          'All categories and expenses for the selected plan will be removed and replaced by this snapshot. The plan row stays the same.',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Replace',
+        rejectLabel: 'Cancel',
+        accept: () => {
+          void this.runImport(mode, targetId!, snapshot);
+        }
+      });
+      return;
+    }
+
+    void this.runImport(mode, undefined, snapshot);
+  }
+
+  private async runImport(
+    mode: PlanImportMode,
+    targetPlanId: string | undefined,
+    snapshot: PlanExportSnapshot
+  ): Promise<void> {
+    this.importing.set(true);
+    try {
+      await this.plansApi.importSnapshot({
+        mode,
+        targetPlanId: mode === 'replace' ? targetPlanId : undefined,
+        snapshot
+      });
+      await this.store.refresh();
+      this.messages.add({
+        severity: 'success',
+        summary: 'Import complete',
+        detail:
+          mode === 'create'
+            ? 'New plan was created and set as active.'
+            : 'Selected plan was updated from the snapshot.'
+      });
+      this.importOpen.set(false);
+    } catch (e) {
+      this.showError(e, 'Import failed');
+    } finally {
+      this.importing.set(false);
+    }
   }
 }

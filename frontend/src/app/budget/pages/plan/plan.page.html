@@ -69,7 +69,21 @@
       </form>
     </p-card>
 
-    <p-card header="Your plans">
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="card-header-row">
+          <span class="card-title">Your plans</span>
+          <p-button
+            type="button"
+            label="Import JSON"
+            icon="pi pi-upload"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="openImport()"
+          />
+        </div>
+      </ng-template>
+
       @if (plans().length === 0) {
         <div class="empty">
           <p class="muted">No plans yet. Create your first plan to start tracking.</p>
@@ -81,7 +95,7 @@
               <th>Name</th>
               <th>Income</th>
               <th>Dates</th>
-              <th style="width: 12rem;">Actions</th>
+              <th class="actions-col">Actions</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-plan>
@@ -101,10 +115,26 @@
                   <p-button
                     type="button"
                     size="small"
+                    label="Export"
+                    icon="pi pi-download"
+                    [loading]="exportingId() === plan.id"
+                    [disabled]="
+                      activatingId() !== null || deletingId() !== null || exportingId() !== null
+                    "
+                    (onClick)="exportPlanSnapshot(plan.id, plan.name)"
+                  />
+                  <p-button
+                    type="button"
+                    size="small"
                     label="Activate"
                     icon="pi pi-bolt"
                     [loading]="activatingId() === plan.id"
-                    [disabled]="plan.id === activePlanId() || activatingId() !== null || deletingId() !== null"
+                    [disabled]="
+                      plan.id === activePlanId() ||
+                      activatingId() !== null ||
+                      deletingId() !== null ||
+                      exportingId() !== null
+                    "
                     (onClick)="setActive(plan.id)"
                   />
                   <p-button
@@ -114,7 +144,9 @@
                     label="Delete"
                     icon="pi pi-trash"
                     [loading]="deletingId() === plan.id"
-                    [disabled]="activatingId() !== null || deletingId() !== null"
+                    [disabled]="
+                      activatingId() !== null || deletingId() !== null || exportingId() !== null
+                    "
                     (onClick)="deletePlan(plan.id)"
                   />
                 </div>
@@ -127,3 +159,83 @@
   </div>
 </div>
 
+<p-dialog
+  header="Import plan from JSON"
+  [visible]="importOpen()"
+  (visibleChange)="importOpen.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [closable]="!importing()"
+  [style]="{ width: 'min(96vw, 640px)' }"
+>
+  <div class="import-dialog">
+    <p class="muted import-hint">
+      Paste a snapshot you exported with <strong>Export</strong>. Create adds a new active plan; Replace
+      keeps the plan id but wipes and rebuilds its categories and expenses.
+    </p>
+
+    <div class="field">
+      <label for="import-mode">Import mode</label>
+      <p-select
+        inputId="import-mode"
+        [options]="importModeOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="importMode()"
+        (ngModelChange)="importMode.set($event)"
+        [disabled]="importing()"
+        styleClass="w-full"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+
+    @if (importMode() === 'replace') {
+      <div class="field">
+        <label for="import-target">Plan to replace</label>
+        <p-select
+          inputId="import-target"
+          [options]="plans()"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Select plan"
+          [ngModel]="importReplacePlanId()"
+          (ngModelChange)="importReplacePlanId.set($event)"
+          [disabled]="importing()"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+    }
+
+    <div class="field">
+      <label for="import-json">JSON snapshot</label>
+      <textarea
+        id="import-json"
+        pTextarea
+        rows="14"
+        class="import-textarea"
+        [ngModel]="importJson()"
+        (ngModelChange)="importJson.set($event)"
+        [disabled]="importing()"
+        placeholder='{"schemaVersion":1,...}'
+      ></textarea>
+    </div>
+
+    <div class="dialog-actions">
+      <p-button
+        type="button"
+        label="Cancel"
+        severity="secondary"
+        [disabled]="importing()"
+        (onClick)="importOpen.set(false)"
+      />
+      <p-button
+        type="button"
+        label="Import"
+        icon="pi pi-check"
+        [loading]="importing()"
+        [disabled]="importing()"
+        (onClick)="confirmImport()"
+      />
+    </div>
+  </div>
+</p-dialog>

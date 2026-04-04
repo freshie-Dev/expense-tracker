@@ -1,0 +1,9 @@
+# Do not copy host node_modules over Linux npm ci install (fixes tsc: Permission denied).
+node_modules
+dist
+.git
+.env
+.env.*
+*.log
+coverage
+.DS_Store

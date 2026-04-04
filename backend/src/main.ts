@@ -79,12 +79,20 @@ async function bootstrap(): Promise<void> {
   app.use(notFoundHandler);
   app.use(globalErrorHandler);
 
-  app.listen(appConfig.PORT, () => {
+  const port = process.env.PORT || appConfig.PORT || 5000;
+
+  app.listen(port, () => {
     logger.info(
-      { port: appConfig.PORT, env: appConfig.NODE_ENV },
-      `Budget Tracker API running on http://localhost:${appConfig.PORT}`
+      { port, env: appConfig.NODE_ENV },
+      `Server running on port ${port}`
     );
   });
+  // app.listen(appConfig.PORT, () => {
+  //   logger.info(
+  //     { port: appConfig.PORT, env: appConfig.NODE_ENV },
+  //     `Budget Tracker API running on http://localhost:${appConfig.PORT}`
+  //   );
+  // });
 }
 
 bootstrap().catch((err) => {
